@@ -1,0 +1,74 @@
+type Customer {
+
+    customerUuid: ID!
+
+    firstName: String!
+
+    lastName: String!
+
+    email: String!
+
+    phone: String!
+
+    status: String!
+
+}
+
+input CreateCustomerInput {
+
+    firstName: String!
+
+    lastName: String!
+
+    email: String!
+
+    phone: String!
+
+}
+
+type Mutation {
+
+    createCustomer(input: CreateCustomerInput!): Customer
+
+}
+
+input UpdateCustomerInput {
+
+    firstName: String!
+
+    lastName: String!
+
+    email: String!
+
+    phone: String!
+
+}
+
+extend type Mutation {
+
+    updateCustomer(
+        customerUuid: ID!,
+        input: UpdateCustomerInput!
+    ): Customer
+
+}
+extend type Mutation{
+
+    deleteCustomer(
+        customerUuid: ID!
+    ): Boolean!
+
+}
+
+type Query {
+
+    customerByUuid(customerUuid: ID!): Customer
+
+     customers(
+            page:Int!,
+            size:Int!
+        ): [Customer!]!
+
+
+}
+
