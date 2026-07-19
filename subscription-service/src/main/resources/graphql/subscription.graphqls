@@ -1,0 +1,125 @@
+type SubscriptionPlan {
+    planUuid: ID!
+    name: String!
+    description: String
+    price: Float!
+    billingCycle: BillingCycle!
+    status: PlanStatus!
+}
+
+enum BillingCycle {
+    MONTHLY
+    QUARTERLY
+    YEARLY
+}
+
+enum PlanStatus {
+    ACTIVE
+    INACTIVE
+}
+
+input CreatePlanInput {
+    name: String!
+    description: String
+    price: Float!
+    billingCycle: BillingCycle!
+}
+
+input UpdatePlanInput {
+    name: String!
+    description: String
+    price: Float!
+    billingCycle: BillingCycle!
+    status: PlanStatus!
+}
+
+type Query {
+
+    planByUuid(planUuid: ID!): SubscriptionPlan
+
+    allPlans(page: Int!, size: Int!): [SubscriptionPlan]
+}
+
+type Mutation {
+
+    createPlan(input: CreatePlanInput!): SubscriptionPlan
+
+    updatePlan(
+        planUuid: ID!,
+        input: UpdatePlanInput!
+    ): SubscriptionPlan
+
+    deletePlan(planUuid: ID!): Boolean
+}
+type Subscription {
+
+    subscriptionUuid: ID!
+
+    customerUuid: ID!
+
+    planUuid: ID!
+
+    status: SubscriptionStatus!
+
+    startDate: String!
+
+    endDate: String!
+
+    nextBillingDate: String!
+
+    autoRenew: Boolean!
+
+}
+
+enum SubscriptionStatus {
+    ACTIVE
+    PAUSED
+    CANCELLED
+    EXPIRED
+    PENDING
+}
+
+input CreateSubscriptionInput {
+
+    customerUuid: ID!
+
+    planUuid: ID!
+
+    autoRenew: Boolean!
+
+}
+
+input UpdateSubscriptionInput {
+
+    planUuid: ID!
+
+    autoRenew: Boolean!
+
+    status: SubscriptionStatus!
+
+}
+
+extend type Query {
+
+    subscriptionByUuid(subscriptionUuid: ID!): Subscription
+
+    subscriptionsByCustomer(customerUuid: ID!): [Subscription]
+
+}
+
+extend type Mutation {
+
+    createSubscription(
+        input: CreateSubscriptionInput!
+    ): Subscription
+
+    updateSubscription(
+        subscriptionUuid: ID!,
+        input: UpdateSubscriptionInput!
+    ): Subscription
+
+    cancelSubscription(
+        subscriptionUuid: ID!
+    ): Boolean
+
+}
