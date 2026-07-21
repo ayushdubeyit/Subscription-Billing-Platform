@@ -6,6 +6,7 @@ import com.ayush.subscription.subscription.dto.UpdateSubscriptionRequest;
 import com.ayush.subscription.subscription.entity.Subscription;
 import com.ayush.subscription.subscription.entity.SubscriptionPlan;
 import com.ayush.subscription.subscription.enums.SubscriptionStatus;
+import com.ayush.subscription.subscription.exception.PaymentFailedException;
 import com.ayush.subscription.subscription.exception.PlanNotFoundException;
 import com.ayush.subscription.subscription.exception.SubscriptionNotFoundException;
 import com.ayush.subscription.subscription.repository.SubscriptionPlanRepository;
@@ -18,6 +19,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import com.ayush.subscription.subscription.client.PaymentGrpcClient;
+import com.ayush.subscription.payment.grpc.ProcessPaymentResponse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +32,7 @@ import java.util.UUID;
 public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionPlanRepository planRepository;
     private final SubscriptionRepository repository;
-
+    private final PaymentGrpcClient paymentGrpcClient;
     @Override
     @Transactional
     public SubscriptionResponse createSubscription(CreateSubscriptionRequest request) {
@@ -56,10 +59,25 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             default ->
                     throw new IllegalStateException("Invalid Billing Cycle");
         }
+        UUID subscriptionUuid = UUID.randomUUID();
+
+        ProcessPaymentResponse paymentResponse =
+                paymentGrpcClient.processPayment(
+                        request.getCustomerUuid().toString(),
+                        subscriptionUuid.toString(),
+                        plan.getPrice().doubleValue(),
+                        "INR"
+                );
+
+        if (!"SUCCESS".equalsIgnoreCase(paymentResponse.getStatus())) {
+            throw new PaymentFailedException(
+                    "Payment failed with status : "
+                            + paymentResponse.getStatus());
+        }
 
         Subscription subscription = Subscription.builder()
 
-                .subscriptionUuid(UUID.randomUUID())
+                .subscriptionUuid(subscriptionUuid)
                 .customerUuid(request.getCustomerUuid())
                 .planUuid(request.getPlanUuid())
                 .status(SubscriptionStatus.ACTIVE)

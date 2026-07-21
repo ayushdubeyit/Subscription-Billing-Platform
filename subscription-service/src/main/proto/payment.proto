@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.ayush.subscription.payment.grpc";
+option java_outer_classname = "PaymentProto";
+
+service PaymentGrpcService {
+
+  rpc ProcessPayment(ProcessPaymentRequest)
+      returns (ProcessPaymentResponse);
+
+  rpc GetPaymentHistory(GetPaymentHistoryRequest)
+      returns (GetPaymentHistoryResponse);
+}
+
+message ProcessPaymentRequest {
+  string subscriptionUuid = 1;
+  string customerUuid = 2;
+  double amount = 3;
+  string currency = 4;
+}
+
+message ProcessPaymentResponse {
+  string paymentUuid = 1;
+  string transactionId = 2;
+  string status = 3;
+}
+
+message GetPaymentHistoryRequest {
+  string customerUuid = 1;
+}
+
+message PaymentHistory {
+  string paymentUuid = 1;
+  double amount = 2;
+  string status = 3;
+  string transactionId = 4;
+}
+
+message GetPaymentHistoryResponse {
+  repeated PaymentHistory payments = 1;
+}

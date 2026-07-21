@@ -16,4 +16,5 @@ public class SubscriptionServiceApplication {
 		SpringApplication.run(SubscriptionServiceApplication.class, args);
 	}
 
+
 }
