@@ -1,0 +1,43 @@
+type BillingResponse {
+
+    billingUuid: ID!
+    customerUuid: ID!
+    subscriptionUuid: ID!
+
+    totalAmount: Float!
+    currency: String!
+
+    status: String!
+
+    createdAt: String!
+}
+
+input CreateBillingRequest {
+
+    customerUuid: ID!
+
+    subscriptionUuid: ID!
+
+    baseAmount: Float!
+
+    discount: Float!
+
+    tax: Float!
+
+    currency: String!
+}
+
+type Mutation {
+
+    createBilling(
+        request: CreateBillingRequest!
+    ): BillingResponse!
+}
+type Query {
+
+    health: String
+
+    getBilling(
+        billingUuid: ID!
+    ): BillingResponse!
+}
