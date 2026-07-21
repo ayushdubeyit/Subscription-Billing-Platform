@@ -20,7 +20,7 @@ public class PaymentHelper {
         payment.setPaymentMethod(request.getPaymentMethod());
 
 
-        payment.setStatus(PaymentStatus.PENDING);
+        payment.setStatus(PaymentStatus.SUCCESS);
 
         return payment;
     }
