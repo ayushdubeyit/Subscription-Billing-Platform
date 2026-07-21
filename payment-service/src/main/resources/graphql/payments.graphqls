@@ -1,0 +1,93 @@
+type Payment {
+
+    paymentUuid: ID!
+
+    subscriptionUuid: ID!
+
+    customerUuid: ID!
+
+    amount: Float!
+
+    currency: String!
+
+    paymentMethod: PaymentMethod!
+
+    status: PaymentStatus!
+
+    transactionId: String!
+
+    createdAt: String!
+
+    updatedAt: String!
+}
+
+enum PaymentMethod {
+
+    CARD
+
+    UPI
+
+    NET_BANKING
+
+    WALLET
+}
+
+enum PaymentStatus {
+
+    PENDING
+
+    PROCESSING
+
+    SUCCESS
+
+    FAILED
+}
+
+input CreatePaymentInput {
+
+    subscriptionUuid: ID!
+
+    customerUuid: ID!
+
+    amount: Float!
+
+    currency: String!
+
+    paymentMethod: PaymentMethod!
+}
+
+input UpdatePaymentStatusInput {
+
+    status: PaymentStatus!
+}
+
+type Query {
+
+    getPayment(
+        paymentUuid: ID!
+    ): Payment
+
+    getPaymentsByCustomer(
+        customerUuid: ID!
+    ): [Payment]
+
+    getPaymentsBySubscription(
+        subscriptionUuid: ID!
+    ): [Payment]
+}
+
+type Mutation {
+
+    createPayment(
+        input: CreatePaymentInput!
+    ): Payment
+
+    updatePaymentStatus(
+        paymentUuid: ID!,
+        input: UpdatePaymentStatusInput!
+    ): Payment
+
+    deletePayment(
+        paymentUuid: ID!
+    ): Boolean
+}
