@@ -1,8 +1,12 @@
 package com.ayush.subscription.subscription.service.impl;
 
+
+import com.ayush.subscription.subscription.client.BillingServiceClient;
 import com.ayush.subscription.subscription.dto.CreateSubscriptionRequest;
 import com.ayush.subscription.subscription.dto.SubscriptionResponse;
 import com.ayush.subscription.subscription.dto.UpdateSubscriptionRequest;
+import com.ayush.subscription.subscription.dto.billing.BillingResponse;
+import com.ayush.subscription.subscription.dto.billing.CreateBillingRequest;
 import com.ayush.subscription.subscription.entity.Subscription;
 import com.ayush.subscription.subscription.entity.SubscriptionPlan;
 import com.ayush.subscription.subscription.enums.SubscriptionStatus;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import com.ayush.subscription.subscription.client.PaymentGrpcClient;
 import com.ayush.subscription.payment.grpc.ProcessPaymentResponse;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +38,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionPlanRepository planRepository;
     private final SubscriptionRepository repository;
     private final PaymentGrpcClient paymentGrpcClient;
+    private final BillingServiceClient billingServiceClient;
     @Override
     @Transactional
     public SubscriptionResponse createSubscription(CreateSubscriptionRequest request) {
@@ -89,7 +95,33 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return SubscriptionHelper.toResponse(repository.save(subscription));
+        Subscription savedSubscription = repository.save(subscription);
+
+
+        CreateBillingRequest billingRequest =
+                CreateBillingRequest.builder()
+                        .customerUuid(savedSubscription.getCustomerUuid())
+                        .subscriptionUuid(savedSubscription.getSubscriptionUuid())
+                        .baseAmount(plan.getPrice())
+                        .discount(BigDecimal.ZERO)
+                        .tax(BigDecimal.ZERO)
+                        .currency("INR")
+                        .build();
+
+        try {
+
+            BillingResponse billingResponse =
+                    billingServiceClient.createBilling(billingRequest);
+
+            if (billingResponse == null) {
+                throw new RuntimeException("Billing Service returned null response.");
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Failed to create billing.", ex);
+        }
+
+        return SubscriptionHelper.toResponse(savedSubscription);
 
     }
     @Cacheable(

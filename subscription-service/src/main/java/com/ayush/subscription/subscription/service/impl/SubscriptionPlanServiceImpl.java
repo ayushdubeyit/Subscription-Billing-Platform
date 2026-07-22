@@ -3,6 +3,7 @@ package com.ayush.subscription.subscription.service.impl;
 import com.ayush.subscription.subscription.dto.CreatePlanRequest;
 import com.ayush.subscription.subscription.dto.SubscriptionPlanResponse;
 import com.ayush.subscription.subscription.dto.UpdatePlanRequest;
+
 import com.ayush.subscription.subscription.entity.SubscriptionPlan;
 import com.ayush.subscription.subscription.enums.PlanStatus;
 import com.ayush.subscription.subscription.exception.DuplicatePlanException;
@@ -48,7 +49,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return PlanHelper.toResponse(repository.save(plan));
+
+
+        return PlanHelper.toResponse(plan);
     }
 
 
