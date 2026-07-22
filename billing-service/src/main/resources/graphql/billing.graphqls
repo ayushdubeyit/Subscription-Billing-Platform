@@ -1,0 +1,76 @@
+type BillingResponse {
+
+    billingUuid: ID!
+    customerUuid: ID!
+    subscriptionUuid: ID!
+
+    totalAmount: Float!
+    currency: String!
+
+    status: String!
+
+    createdAt: String!
+}
+
+input CreateBillingRequest {
+
+    customerUuid: ID!
+
+    subscriptionUuid: ID!
+
+    baseAmount: Float!
+
+    discount: Float!
+
+    tax: Float!
+
+    currency: String!
+}
+type InvoiceResponse {
+
+    invoiceUuid: ID!
+
+    invoiceNumber: String!
+
+    amount: Float!
+
+    status: InvoiceStatus!
+
+    issuedAt: String!
+
+}
+enum InvoiceStatus {
+    GENERATED
+    SENT
+    PAID
+    OVERDUE
+    CANCELLED
+}
+
+type Mutation {
+
+    createBilling(
+        request: CreateBillingRequest!
+    ): BillingResponse!
+}
+type Query {
+
+    health: String
+
+    getBilling(
+        billingUuid: ID!
+    ): BillingResponse!
+
+    getInvoice(
+            invoiceUuid: ID!
+        ): InvoiceResponse!
+
+   getBillingsByCustomer(
+       customerUuid: ID!
+   ): [BillingResponse!]!
+
+   getBillingsBySubscription(
+       subscriptionUuid: ID!
+   ): [BillingResponse!]!
+
+}
