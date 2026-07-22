@@ -1,30 +1,31 @@
 package com.ayush.subscription.billing.dto.request;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public record  CreateBillingRequest (
 
-        @NotNull
+        @NotNull(message = "Customer UUID is required")
         UUID customerUuid,
 
-        @NotNull
+        @NotNull(message = "Subscription UUID is required")
         UUID subscriptionUuid,
 
-        @NotNull
-        @DecimalMin("0.0")
+        @NotNull(message = "Base amount is required")
+        @Positive(message = "Base amount must be greater than 0")
         BigDecimal baseAmount,
 
-        @NotNull
+        @NotNull(message = "Discount is required")
+        @PositiveOrZero(message = "Discount cannot be negative")
         BigDecimal discount,
 
-        @NotNull
+        @NotNull(message = "Tax is required")
+        @PositiveOrZero(message = "Tax cannot be negative")
         BigDecimal tax,
 
-        @NotNull
+        @NotBlank(message = "Currency is required")
         String currency
 
 ){

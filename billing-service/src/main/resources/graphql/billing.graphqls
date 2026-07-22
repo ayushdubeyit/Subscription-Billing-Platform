@@ -26,6 +26,26 @@ input CreateBillingRequest {
 
     currency: String!
 }
+type InvoiceResponse {
+
+    invoiceUuid: ID!
+
+    invoiceNumber: String!
+
+    amount: Float!
+
+    status: InvoiceStatus!
+
+    issuedAt: String!
+
+}
+enum InvoiceStatus {
+    GENERATED
+    SENT
+    PAID
+    OVERDUE
+    CANCELLED
+}
 
 type Mutation {
 
@@ -40,4 +60,17 @@ type Query {
     getBilling(
         billingUuid: ID!
     ): BillingResponse!
+
+    getInvoice(
+            invoiceUuid: ID!
+        ): InvoiceResponse!
+
+   getBillingsByCustomer(
+       customerUuid: ID!
+   ): [BillingResponse!]!
+
+   getBillingsBySubscription(
+       subscriptionUuid: ID!
+   ): [BillingResponse!]!
+
 }
