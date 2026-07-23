@@ -2,6 +2,7 @@ package com.ayush.subscription.subscription.service.impl;
 
 
 import com.ayush.subscription.subscription.client.BillingServiceClient;
+import com.ayush.subscription.subscription.client.CustomerServiceClient;
 import com.ayush.subscription.subscription.dto.CreateSubscriptionRequest;
 import com.ayush.subscription.subscription.dto.SubscriptionResponse;
 import com.ayush.subscription.subscription.dto.UpdateSubscriptionRequest;
@@ -39,9 +40,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final SubscriptionRepository repository;
     private final PaymentGrpcClient paymentGrpcClient;
     private final BillingServiceClient billingServiceClient;
+    private final CustomerServiceClient customerServiceClient;
     @Override
     @Transactional
     public SubscriptionResponse createSubscription(CreateSubscriptionRequest request) {
+        customerServiceClient.getCustomerByUuid(request.getCustomerUuid());
         SubscriptionPlan plan = planRepository
                 .findByPlanUuid(request.getPlanUuid())
                 .orElseThrow(() ->
