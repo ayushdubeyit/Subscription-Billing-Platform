@@ -50,8 +50,8 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 .build();
 
 
-
-        return PlanHelper.toResponse(plan);
+        SubscriptionPlan savedPlan = repository.save(plan);
+        return PlanHelper.toResponse(savedPlan);
     }
 
 
