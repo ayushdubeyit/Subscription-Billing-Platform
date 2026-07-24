@@ -1,0 +1,29 @@
+enum Role {
+    ADMIN
+    CUSTOMER
+}
+
+input RegisterRequest {
+    firstName: String!
+    lastName: String!
+    email: String!
+    phone: String!
+    password: String!
+}
+
+input LoginRequest {
+    email: String!
+    password: String!
+}
+
+type AuthResponse {
+    accessToken: String
+    customerUuid: ID
+    email: String
+    role: Role
+}
+
+extend type Mutation {
+    register(input: RegisterRequest): AuthResponse
+    login(input: LoginRequest): AuthResponse
+}

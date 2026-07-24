@@ -1,5 +1,7 @@
 package com.ayush.subscription.payment.service.impl;
 
+import com.ayush.subscription.common.event.PaymentSuccessEvent;
+import com.ayush.subscription.common.event.PaymentFailedEvent;
 import com.ayush.subscription.payment.dto.request.CreatePaymentRequest;
 import com.ayush.subscription.payment.dto.request.UpdatePaymentStatusRequest;
 import com.ayush.subscription.payment.dto.response.PaymentResponse;
@@ -8,6 +10,7 @@ import com.ayush.subscription.payment.enums.PaymentStatus;
 import com.ayush.subscription.payment.exception.InvalidPaymentStateException;
 import com.ayush.subscription.payment.exception.PaymentNotFoundException;
 import com.ayush.subscription.payment.helper.PaymentHelper;
+import com.ayush.subscription.payment.producer.PaymentEventProducer;
 import com.ayush.subscription.payment.repository.PaymentRepository;
 import com.ayush.subscription.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +24,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository repository;
     private final PaymentHelper paymentHelper;
+    private final PaymentEventProducer paymentEventProducer;
     @Override
     public PaymentResponse createPayment(CreatePaymentRequest request) {
         Payment payment = paymentHelper.toEntity(request);
          payment.setTransactionId(UUID.randomUUID().toString());
 
          Payment savedPayment = repository.save(payment);
+
+         publishPaymentEvent(savedPayment);
 
          return paymentHelper.toResponse(savedPayment);
     }
@@ -73,6 +79,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment updatedPayment = repository.save(payment);
 
+        publishPaymentEvent(updatedPayment);
+
         return paymentHelper.toResponse(updatedPayment);
     }
 
@@ -84,5 +92,31 @@ public class PaymentServiceImpl implements PaymentService {
                 ));
 
         repository.delete(payment);
+    }
+
+    private void publishPaymentEvent(Payment payment) {
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            PaymentSuccessEvent event = new PaymentSuccessEvent(
+                    payment.getPaymentUuid(),
+                    payment.getSubscriptionUuid(),
+                    payment.getCustomerUuid(),
+                    payment.getAmount(),
+                    payment.getCurrency()
+            );
+
+            paymentEventProducer.publishPaymentSuccessEvent(event);
+        }
+
+        if (payment.getStatus() == PaymentStatus.FAILED) {
+            PaymentFailedEvent event = new PaymentFailedEvent(
+                    payment.getPaymentUuid(),
+                    payment.getSubscriptionUuid(),
+                    payment.getCustomerUuid(),
+                    payment.getAmount(),
+                    payment.getStatus().name()
+            );
+
+            paymentEventProducer.publishPaymentFailedEvent(event);
+        }
     }
 }

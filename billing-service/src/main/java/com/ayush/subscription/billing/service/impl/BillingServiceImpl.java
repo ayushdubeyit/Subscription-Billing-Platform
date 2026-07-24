@@ -1,6 +1,7 @@
 package com.ayush.subscription.billing.service.impl;
 
 
+import com.ayush.subscription.common.event.InvoiceGeneratedEvent;
 import com.ayush.subscription.billing.dto.request.CreateBillingRequest;
 import com.ayush.subscription.billing.dto.response.BillingResponse;
 import com.ayush.subscription.billing.entity.Billing;
@@ -8,6 +9,7 @@ import com.ayush.subscription.billing.entity.Invoice;
 import com.ayush.subscription.billing.exception.BillingNotFoundException;
 import com.ayush.subscription.billing.repository.BillingRepository;
 import com.ayush.subscription.billing.repository.InvoiceRepository;
+import com.ayush.subscription.billing.producer.BillingEventProducer;
 import com.ayush.subscription.billing.service.interfaces.BillingService;
 import com.ayush.subscription.billing.util.BillingHelper;
 import com.ayush.subscription.billing.util.InvoiceHelper;
@@ -29,6 +31,7 @@ public class BillingServiceImpl implements BillingService {
 
     private final BillingRepository billingRepository;
     private final InvoiceRepository invoiceRepository;
+    private final BillingEventProducer billingEventProducer;
 
     @Override
     public BillingResponse createBilling(CreateBillingRequest request) {
@@ -48,7 +51,18 @@ public class BillingServiceImpl implements BillingService {
                         savedBilling,
                         invoiceNumber
                 );
-        invoiceRepository.save(invoice);
+        Invoice savedInvoice = invoiceRepository.save(invoice);
+
+        InvoiceGeneratedEvent event = new InvoiceGeneratedEvent(
+                savedInvoice.getInvoiceUuid(),
+                savedBilling.getBillingUuid(),
+                savedBilling.getCustomerUuid(),
+                savedInvoice.getAmount(),
+                savedBilling.getCurrency()
+        );
+
+        billingEventProducer.publishInvoiceGeneratedEvent(event);
+
         return BillingHelper.toResponse(savedBilling);
 
     }
