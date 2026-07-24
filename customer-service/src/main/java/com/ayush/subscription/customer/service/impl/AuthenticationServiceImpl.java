@@ -62,7 +62,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Customer not found with email: " + request.getEmail()));
 
-        if (customer.getPassword() == null
+        if (customer.getStatus() != CustomerStatus.ACTIVE
+                || customer.getPassword() == null
                 || !passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
             throw new BadCredentialsException("Invalid credentials");
         }
