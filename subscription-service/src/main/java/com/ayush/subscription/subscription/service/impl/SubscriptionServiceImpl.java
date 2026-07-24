@@ -14,6 +14,7 @@ import com.ayush.subscription.subscription.enums.SubscriptionStatus;
 import com.ayush.subscription.subscription.exception.PaymentFailedException;
 import com.ayush.subscription.subscription.exception.PlanNotFoundException;
 import com.ayush.subscription.subscription.exception.SubscriptionNotFoundException;
+import com.ayush.subscription.subscription.producer.SubscriptionEventProducer;
 import com.ayush.subscription.subscription.repository.SubscriptionPlanRepository;
 import com.ayush.subscription.subscription.repository.SubscriptionRepository;
 import com.ayush.subscription.subscription.service.SubscriptionService;
@@ -26,6 +27,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import com.ayush.subscription.subscription.client.PaymentGrpcClient;
 import com.ayush.subscription.payment.grpc.ProcessPaymentResponse;
+import com.ayush.subscription.common.event.SubscriptionCreatedEvent;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,6 +43,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final PaymentGrpcClient paymentGrpcClient;
     private final BillingServiceClient billingServiceClient;
     private final CustomerServiceClient customerServiceClient;
+    private final SubscriptionEventProducer subscriptionEventProducer;
     @Override
     @Transactional
     public SubscriptionResponse createSubscription(CreateSubscriptionRequest request) {
@@ -119,6 +122,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (billingResponse == null) {
                 throw new RuntimeException("Billing Service returned null response.");
             }
+            SubscriptionCreatedEvent event = new SubscriptionCreatedEvent(
+                    savedSubscription.getSubscriptionUuid(),
+                    savedSubscription.getCustomerUuid(),
+                    savedSubscription.getPlanUuid(),
+                    savedSubscription.getStatus().name()
+            );
+
+            subscriptionEventProducer.publishSubscriptionCreatedEvent(event);
 
         } catch (Exception ex) {
             throw new RuntimeException("Failed to create billing.", ex);
