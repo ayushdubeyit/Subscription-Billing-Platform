@@ -2,6 +2,7 @@ package com.ayush.subscription.customer.entity;
 
 
 import com.ayush.subscription.customer.enums.CustomerStatus;
+import com.ayush.subscription.customer.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,6 +41,14 @@ public class Customer {
 
 
     private String phone;
+
+    private String password;
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false , name = "role")
+    @Builder.Default
+    private Role role = Role.CUSTOMER;
 
 
     @Enumerated(EnumType.STRING)

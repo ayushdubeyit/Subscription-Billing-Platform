@@ -7,6 +7,7 @@ import com.ayush.subscription.customer.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.UUID;
@@ -20,18 +21,21 @@ public class CustomerMutation {
 
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public CustomerResponse createCustomer(@Argument("input") CreateCustomerRequest request){
         return customerService.createCustomer(request);
     }
 
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public CustomerResponse updateCustomer(@Argument("customerUuid") UUID customerByUuid ,
                                            @Argument("input") UpdateCustomerRequest request){
         return  customerService.updateCustomer(customerByUuid,request);
     }
 
     @MutationMapping
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public Boolean deleteCustomer(
             @Argument UUID customerUuid
     ) {

@@ -1,0 +1,15 @@
+ALTER TABLE customers
+ADD COLUMN password VARCHAR(255);
+
+ALTER TABLE customers
+ADD COLUMN role VARCHAR(20);
+
+UPDATE customers
+SET role = 'CUSTOMER'
+WHERE role IS NULL;
+
+ALTER TABLE customers
+ALTER COLUMN role SET DEFAULT 'CUSTOMER';
+
+ALTER TABLE customers
+ALTER COLUMN role SET NOT NULL;
