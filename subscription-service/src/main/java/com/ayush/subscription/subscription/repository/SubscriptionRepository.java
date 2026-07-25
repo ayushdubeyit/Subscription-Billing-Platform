@@ -1,8 +1,10 @@
 package com.ayush.subscription.subscription.repository;
 
 import com.ayush.subscription.subscription.entity.Subscription;
+import com.ayush.subscription.subscription.enums.SubscriptionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,5 +19,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription,Long>
     boolean existsByCustomerUuidAndPlanUuid(
             UUID customerUuid,
             UUID planUuid
+    );
+    List<Subscription> findByStatusAndAutoRenewTrueAndNextBillingDateLessThanEqual(
+            SubscriptionStatus status,
+            LocalDate nextBillingDate
     );
 }
