@@ -52,7 +52,8 @@ public class SecurityConfig {
                                 .getAttribute(GraphQlPublicOperationFilter
                                         .PUBLIC_OPERATION_ATTRIBUTE)))
                         .permitAll()
-                        .requestMatchers("/graphiql/**", "/actuator/health")
+
+                        .requestMatchers("/graphiql/**", "/actuator/**")
                         .permitAll()
                         .anyRequest().authenticated()
                 )

@@ -59,7 +59,7 @@ public class GatewaySecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/graphiql/**", "/actuator/health")
+                        .requestMatchers("/graphiql/**", "/actuator/**")
                         .permitAll()
                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
