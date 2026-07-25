@@ -31,8 +31,8 @@
         <module>billing-service</module>
         <module>notification-service</module>
         <module>graphql-gateway</module>
+        <module>discovery-server</module>
     </modules>
-
     <properties>
 
         <java.version>17</java.version>

@@ -7,6 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="common-lib" />
+        <module name="discovery-server" />
       </profile>
       <profile name="Annotation profile for Subscription Billing System" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -14,11 +15,12 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
         <module name="Notification-service" />
         <module name="GraphQL-Gateway" />
-        <module name="payment-service" />
         <module name="subscription-service" />
+        <module name="payment-service" />
         <module name="customer-service" />
         <module name="billing-service" />
       </profile>
@@ -31,6 +33,7 @@
       <module name="billing-service" options="-parameters" />
       <module name="common-lib" options="-parameters" />
       <module name="customer-service" options="-parameters" />
+      <module name="discovery-server" options="-parameters" />
       <module name="payment-service" options="-parameters" />
       <module name="subscription-service" options="-parameters" />
     </option>
