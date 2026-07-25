@@ -27,6 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return User.withUsername(customer.getEmail())
                 .password(customer.getPassword())
+                .disabled(customer.getStatus() != com.ayush.subscription.customer.enums.CustomerStatus.ACTIVE)
                 .authorities(List.of(new SimpleGrantedAuthority(
                         "ROLE_" + customer.getRole().name())))
                 .build();

@@ -1,0 +1,7 @@
+# Security reference
+
+`JwtUtil.generateToken` signs HS256 with `jwt.secret`, 86,400,000-ms expiry, and subject/email/customerUuid/role claims (`customer-service/src/main/java/com/ayush/subscription/customer/util/JwtUtil.java`; properties). The default development secret is committed in both customer and gateway configuration. `AuthenticationServiceImpl.register` returns a null token; login returns a token.
+
+Gateway decodes HS256 using the same secret and requires authentication for all paths except `/graphiql/**` and `/actuator/health` (`GraphQL-Gateway/src/main/java/.../GatewaySecurityConfig.java`). It forwards the Authorization header to three downstream GraphQL clients (`.../WebClientConfig.java`). Gateway does not expose login/register, making a gateway-only client unable to obtain a token from the repository's public schema.
+
+Customer has `JwtAuthenticationFilter` and a public-operation filter, but neither is inserted into the `SecurityFilterChain`; that chain permits every request and `@EnableMethodSecurity` is absent (`customer-service/src/main/java/.../config/SecurityConfig.java`). Thus source does not establish JWT validation or `@PreAuthorize` enforcement in customer. Subscription/payment/billing have no security configuration. No CSRF (disabled gateway/customer), CORS, secret rotation, refresh/revocation, audience/issuer, service auth, ownership checks, TLS, or secure secret store is found.

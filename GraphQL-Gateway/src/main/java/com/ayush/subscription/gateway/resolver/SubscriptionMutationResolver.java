@@ -4,6 +4,7 @@ import com.ayush.subscription.gateway.client.SubscriptionServiceClient;
 import com.ayush.subscription.gateway.dto.subscription.*;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -19,6 +20,7 @@ public class SubscriptionMutationResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public SubscriptionPlanDto createPlan(
             @Argument CreatePlanInput input){
 
@@ -26,6 +28,7 @@ public class SubscriptionMutationResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public SubscriptionPlanDto updatePlan(
             @Argument String planUuid,
             @Argument UpdatePlanInput input){
@@ -34,6 +37,7 @@ public class SubscriptionMutationResolver {
     }
 
     @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Boolean deletePlan(
             @Argument String planUuid){
 

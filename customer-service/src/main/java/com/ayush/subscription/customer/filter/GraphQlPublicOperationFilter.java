@@ -63,7 +63,7 @@ public class GraphQlPublicOperationFilter extends OncePerRequestFilter {
                 return false;
             }
 
-            return Parser.parse(query.asText())
+            List<String> operationNames = Parser.parse(query.asText())
                     .getDefinitionsOfType(OperationDefinition.class)
                     .stream()
                     .filter(definition -> definition.getOperation()
@@ -71,6 +71,10 @@ public class GraphQlPublicOperationFilter extends OncePerRequestFilter {
                     .flatMap(definition -> definition.getSelectionSet()
                             .getSelectionsOfType(Field.class).stream())
                     .map(Field::getName)
+                    .toList();
+
+            return !operationNames.isEmpty()
+                    && operationNames.stream()
                     .allMatch(name -> name.equals("login") || name.equals("register"));
         } catch (RuntimeException | IOException ignored) {
             return false;
