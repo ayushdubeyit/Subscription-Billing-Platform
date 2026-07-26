@@ -6,8 +6,7 @@ import com.ayush.subscription.payment.grpc.ProcessPaymentResponse;
 import io.grpc.ManagedChannel;
 import org.springframework.stereotype.Component;
 import com.ayush.subscription.payment.grpc.PaymentGrpcServiceGrpc;
-import io.grpc.ManagedChannel;
-import org.springframework.stereotype.Component;
+
 
 @Component
 public class PaymentGrpcClient {
@@ -15,7 +14,9 @@ public class PaymentGrpcClient {
     private final PaymentGrpcServiceGrpc.PaymentGrpcServiceBlockingStub blockingStub;
 
     public PaymentGrpcClient(ManagedChannel paymentChannel) {
-        this.blockingStub = PaymentGrpcServiceGrpc.newBlockingStub(paymentChannel);
+        System.out.println("******** USING MANAGED CHANNEL ********");
+        this.blockingStub =
+                PaymentGrpcServiceGrpc.newBlockingStub(paymentChannel);
     }
 
     public ProcessPaymentResponse processPayment(
@@ -25,13 +26,12 @@ public class PaymentGrpcClient {
             String currency
     ) {
 
-        ProcessPaymentRequest request =
-                ProcessPaymentRequest.newBuilder()
-                        .setCustomerUuid(customerUuid)
-                        .setSubscriptionUuid(subscriptionUuid)
-                        .setAmount(amount)
-                        .setCurrency(currency)
-                        .build();
+        ProcessPaymentRequest request = ProcessPaymentRequest.newBuilder()
+                .setCustomerUuid(customerUuid)
+                .setSubscriptionUuid(subscriptionUuid)
+                .setAmount(amount)
+                .setCurrency(currency)
+                .build();
 
         return blockingStub.processPayment(request);
 

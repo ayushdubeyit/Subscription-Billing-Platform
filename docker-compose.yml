@@ -61,12 +61,14 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
 
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://subscription-kafka:9092
+
 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@subscription-kafka:9093
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -88,25 +90,25 @@ services:
       timeout: 10s
       retries: 10
 
-
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: subscription-kafka-ui
-    restart: unless-stopped
-
-    ports:
-      - "8090:8080"
-
-    environment:
-      KAFKA_CLUSTERS_0_NAME: Local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: subscription-kafka:9092
-
-    depends_on:
-      kafka:
-        condition: service_healthy
-
-    networks:
-      - subscription-network
+#
+#  kafka-ui:
+#    image: provectuslabs/kafka-ui:latest
+#    container_name: subscription-kafka-ui
+#    restart: unless-stopped
+#
+#    ports:
+#      - "8090:8080"
+#
+#    environment:
+#      KAFKA_CLUSTERS_0_NAME: Local
+#      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: subscription-kafka:9092
+#
+#    depends_on:
+#      kafka:
+#        condition: service_healthy
+#
+#    networks:
+#      - subscription-network
 
 
   prometheus:
@@ -140,6 +142,205 @@ services:
 
     depends_on:
       - prometheus
+
+    networks:
+      - subscription-network
+
+  discovery-server:
+    image: discovery-server:latest
+    container_name: discovery-server
+    restart: unless-stopped
+
+    ports:
+      - "8761:8761"
+
+    networks:
+      - subscription-network
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --spider -q http://localhost:8761/actuator/health || exit 1" ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  customer-service:
+    image: customer-service:latest
+    container_name: customer-service
+    restart: unless-stopped
+
+    ports:
+      - "8081:8081"
+
+    environment:
+      DB_URL: jdbc:postgresql://subscription-postgres:5432/customer_db
+      REDIS_HOST: subscription-redis
+      EUREKA_URL: http://discovery-server:8761/eureka
+      JWT_SECRET: my-super-secret-jwt-key-for-subscription-platform-2026
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      discovery-server:
+        condition: service_started
+
+    networks:
+      - subscription-network
+
+  subscription-service:
+    image: subscription-service:latest
+    container_name: subscription-service
+    restart: unless-stopped
+
+    ports:
+      - "8082:8082"
+
+    environment:
+      DB_URL: jdbc:postgresql://subscription-postgres:5432/subscription_db
+      REDIS_HOST: subscription-redis
+      KAFKA_BOOTSTRAP_SERVERS: subscription-kafka:9092
+      EUREKA_URL: http://discovery-server:8761/eureka
+      PAYMENT_GRPC_ADDRESS: static://payment-service:9090
+      CUSTOMER_SERVICE_URL: http://customer-service:8081/graphql
+      BILLING_SERVICE_URL: http://billing-service:8084/graphql
+      PAYMENT_GRPC_HOST: payment-service
+      PAYMENT_GRPC_PORT: 9090
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      kafka:
+        condition: service_healthy
+
+      discovery-server:
+        condition: service_started
+
+      customer-service:
+        condition: service_started
+
+    networks:
+      - subscription-network
+
+  payment-service:
+   image: payment-service:latest
+   container_name: payment-service
+   restart: unless-stopped
+
+   ports:
+    - "8083:8083"
+    - "9090:9090"
+
+   environment:
+    DB_URL: jdbc:postgresql://subscription-postgres:5432/payment_db
+    DB_USERNAME: postgres
+    DB_PASSWORD: postgres
+
+    KAFKA_BOOTSTRAP_SERVERS: subscription-kafka:9092
+
+    EUREKA_URL: http://discovery-server:8761/eureka
+
+   depends_on:
+    postgres:
+      condition: service_healthy
+
+    kafka:
+      condition: service_healthy
+
+    discovery-server:
+      condition: service_started
+
+   networks:
+    - subscription-network
+
+  billing-service:
+    image: billing-service:latest
+    container_name: billing-service
+    restart: unless-stopped
+
+    ports:
+      - "8084:8084"
+
+    environment:
+      DB_URL: jdbc:postgresql://subscription-postgres:5432/billing_db
+      KAFKA_BOOTSTRAP_SERVERS: subscription-kafka:9092
+      EUREKA_URL: http://discovery-server:8761/eureka
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      kafka:
+        condition: service_healthy
+
+      discovery-server:
+        condition: service_started
+
+    networks:
+      - subscription-network
+
+  notification-service:
+    image: notification-service:latest
+    container_name: notification-service
+    restart: unless-stopped
+
+    ports:
+      - "8085:8085"
+
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: subscription-kafka:9092
+      EUREKA_URL: http://discovery-server:8761/eureka
+
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+      discovery-server:
+        condition: service_started
+
+    networks:
+      - subscription-network
+
+  graphql-gateway:
+    image: graphql-gateway:latest
+    container_name: graphql-gateway
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      JWT_SECRET: my-super-secret-jwt-key-for-subscription-platform-2026
+
+    depends_on:
+      discovery-server:
+        condition: service_started
+
+      customer-service:
+        condition: service_started
+
+      subscription-service:
+        condition: service_started
+
+      payment-service:
+        condition: service_started
+
+      billing-service:
+        condition: service_started
+
+      notification-service:
+        condition: service_started
 
     networks:
       - subscription-network
